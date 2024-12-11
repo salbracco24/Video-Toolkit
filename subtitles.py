@@ -1,3 +1,4 @@
+import info
 import os
 import re
 import subprocess
@@ -67,6 +68,7 @@ def encode_subtitles_from_others_into_all_media_files():
         subtitle_file = corresponding_subtitle_files[0]
         subtitle_file_name, _ = os.path.splitext(subtitle_file)
         subtitle_file_path = os.path.join(subtitle_source_folder, subtitle_file)
+        info.verify_durations_match(video_file_path, subtitle_file_path, subtitle_file_name)
         output_media_file = subtitle_file_name + output_media_suffix + '.mkv' if video_source_folder == destination_folder else subtitle_file_name + '.mkv'
         output_file_path = os.path.join(destination_folder, output_media_file)
         encode_subtitles_into_media_file(video_file_path, subtitle_file_path, output_file_path, subtitle_offset)
