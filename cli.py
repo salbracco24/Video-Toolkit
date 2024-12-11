@@ -11,7 +11,8 @@ def main():
         1: ('Print video info', info.print_video_info_for_all),
         2: ('Merge subtitles', subtitles.encode_subtitles_into_all_media_files),
         3: ('Shift subtitles', lambda: subtitles.encode_subtitles_into_all_media_files(shift = True)),
-        4: ('Merge subtitles from other video files', subtitles.encode_subtitles_from_others_into_all_media_files)
+        4: ('Merge subtitles from other video files', subtitles.encode_subtitles_from_others_into_all_media_files),
+        5: ('Merge subtitles from other video files in multiple folders (Experimental)', subtitles.encode_subtitles_from_others_into_all_media_files_in_multiple_directories)
     }
     
     print()

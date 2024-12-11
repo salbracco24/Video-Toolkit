@@ -15,7 +15,7 @@ def encode_subtitles_into_media_file(input_media_file, input_subtitle_file, outp
     ffmpeg_with_args.extend(['-metadata:s:s:0', 'language=eng', output_media_file])
     subprocess.run(ffmpeg_with_args, check=True)
 
-def encode_subtitles_into_all_media_files(source_folder = None, destination_folder = None, subtitle_offset = None, shift = False):
+def encode_subtitles_into_all_media_files(source_folder=None, destination_folder=None, subtitle_offset=None, shift=False):
     source_folder = source_folder or input('Source folder: ')
     if not os.path.isdir(source_folder): return
     destination_folder = destination_folder or input('Destination folder: ')
@@ -42,7 +42,8 @@ def encode_subtitles_into_all_media_files(source_folder = None, destination_fold
 
     print('\nAll files processed successfully!')
 
-def encode_subtitles_from_others_into_all_media_files(video_source_folder = None, subtitle_source_folder = None, destination_folder = None, subtitle_offset = None):
+def encode_subtitles_from_others_into_all_media_files(video_source_folder=None, subtitle_source_folder=None, destination_folder=None, subtitle_offset=None, log_file=None):
+    log = (lambda msg: print(msg, file=log_file)) if log_file else print
     video_source_folder = video_source_folder or input('Video source folder: ')
     if not os.path.isdir(video_source_folder): return
     subtitle_source_folder = subtitle_source_folder or input('Subtitle source folder: ')
@@ -64,7 +65,7 @@ def encode_subtitles_from_others_into_all_media_files(video_source_folder = None
         video_file_name, video_file_extension = os.path.splitext(video_file)
         match = pattern.search(video_file_name)
         if not match:
-            print(f'The file {video_file} does not contain a valid episode identifier.')
+            log(f'The file {video_file} does not contain a valid episode identifier.')
             continue
         episode_id = match[0]
         corresponding_subtitle_files = [file for file in subtitle_files if episode_id in file]
@@ -77,9 +78,9 @@ def encode_subtitles_from_others_into_all_media_files(video_source_folder = None
         diff = info.durations_difference(video_file_path, subtitle_file_path)
         if max_ignorable_difference < diff < max_difference:
             subtitle_offset = diff + 's'
-            print(f'Difference: {diff} used as subtitle offset.')
+            log(f'Difference: {diff} used as subtitle offset.')
         if diff > max_difference:
-            print(f'Difference: {diff} is too large to correct. Skipped!')
+            log(f'Difference: {diff} is too large to correct. Skipped!')
             continue
 
         output_file_extension = '.mkv' if video_file_extension == '.mkv' or info.has_picture_based_subtitles(video_file_path) else '.mp4'
@@ -91,5 +92,9 @@ def encode_subtitles_from_others_into_all_media_files(video_source_folder = None
     print('\nAll files processed successfully!')
 
 def encode_subtitles_from_others_into_all_media_files_in_multiple_directories():
-    i = 0
-    return
+    with open('errors.txt', 'a', encoding='utf-8') as f:
+        for i in range(0, 21):
+            video_source_folder = fr''
+            subtitle_source_folder = fr''
+            destination_folder = fr''
+            encode_subtitles_from_others_into_all_media_files(video_source_folder, subtitle_source_folder, destination_folder, log_file=f)
