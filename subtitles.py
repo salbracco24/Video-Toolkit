@@ -10,7 +10,7 @@ def encode_subtitles_into_media_file(input_media_file, input_subtitle_file, outp
     if subtitle_offset:
         ffmpeg_with_args.extend(['-itsoffset', subtitle_offset])  # .extend(['-sub_charenc', 'WINDOWS-1252'])
     ffmpeg_with_args.extend(['-i', input_subtitle_file, '-map', '0:v', '-map', '0:a', '-map', '1:s', '-c', 'copy'])
-    if output_media_file.endsWith('.mp4'):
+    if output_media_file.endswith('.mp4'):
         ffmpeg_with_args.extend(['-c:s', 'mov_text'])
     ffmpeg_with_args.extend(['-metadata:s:s:0', 'language=eng', output_media_file])
     subprocess.run(ffmpeg_with_args, check=True)
@@ -50,7 +50,7 @@ def encode_subtitles_from_others_into_all_media_files(video_source_folder=None, 
     if not os.path.isdir(subtitle_source_folder): return
     destination_folder = destination_folder or input('Destination folder: ')
     os.makedirs(destination_folder, exist_ok = True)
-    subtitle_offset = subtitle_offset or input('Subtitle offset: ') or None
+    subtitle_offset = subtitle_offset # or input('Subtitle offset: ') or None
     max_difference = 1 # 1s
     max_ignorable_difference = 0.05 # 50ms
     output_media_suffix = ' [Merged]'
@@ -76,20 +76,21 @@ def encode_subtitles_from_others_into_all_media_files(video_source_folder=None, 
         subtitle_file_path = os.path.join(subtitle_source_folder, subtitle_file)
 
         diff = info.durations_difference(video_file_path, subtitle_file_path)
-        if max_ignorable_difference < diff < max_difference:
-            subtitle_offset = diff + 's'
-            log(f'Difference: {diff} used as subtitle offset.')
-        if diff > max_difference:
-            log(f'Difference: {diff} is too large to correct. Skipped!')
+        if max_ignorable_difference < abs(diff) < max_difference:
+            subtitle_offset = str(diff) + 's'
+            log(f'Difference <{diff:.3f}> used as subtitle offset for: {video_file_name}')
+        if abs(diff) > max_difference:
+            log(f'Difference: <{diff:.3f}> is too large to correct. Skipped: {video_file_name}')
             continue
 
-        output_file_extension = '.mkv' if video_file_extension == '.mkv' or info.has_picture_based_subtitles(video_file_path) else '.mp4'
+        output_file_extension = '.mkv' if video_file_extension == '.mkv' or info.has_picture_based_subtitles(subtitle_file_path) else '.mp4'
         output_file_name = subtitle_file_name + output_media_suffix if video_source_folder == destination_folder else subtitle_file_name
-        output_file_path = os.path.join(destination_folder, output_file_name, output_file_extension)
+        output_file_path = os.path.join(destination_folder, output_file_name + output_file_extension)
         encode_subtitles_into_media_file(video_file_path, subtitle_file_path, output_file_path, subtitle_offset)
         success_msg = f'Merged {subtitle_file_name} with offset {subtitle_offset}' if subtitle_offset else f'Merged {subtitle_file_name}'
         print(success_msg)
     print('\nAll files processed successfully!')
+    log('END OF FOLDER')
 
 def encode_subtitles_from_others_into_all_media_files_in_multiple_directories():
     with open('errors.txt', 'a', encoding='utf-8') as f:
