@@ -11,7 +11,16 @@ def get_media_info(file_path):
     return json.loads(result.stdout)
 
 def get_track_by_type(media_info_result, track_type):
-    return next((item for item in media_info_result['media']['track'] if item.get("@type") == track_type), None)
+    return next((item for item in media_info_result['media']['track'] if item.get('@type') == track_type), None)
+
+def get_subtitle_track(media_info_result):
+    tracks = [item for item in media_info_result['media']['track'] if item.get('@type') == 'Text']
+    if not tracks:
+        raise Exception('No subtitle tracks found in this media info!')
+    if len(tracks) == 1:
+        return tracks[0]
+    else:    
+        return next((item for item in tracks if 'Picture' in item['CodecID_Info']), tracks[0])
 
 def durations_difference(video_file_path, subtitle_file_path):
     video_file_audio_duration = float(get_track_by_type(get_media_info(video_file_path), 'Audio')['Duration'])
@@ -19,7 +28,7 @@ def durations_difference(video_file_path, subtitle_file_path):
     return video_file_audio_duration - subtitle_file_audio_duration
 
 def has_picture_based_subtitles(video_file_path):
-    subtitle_codec_id_info = get_track_by_type(get_media_info(video_file_path), 'Text')['CodecID_Info']
+    subtitle_codec_id_info = get_subtitle_track(get_media_info(video_file_path))['CodecID_Info']
     return 'Picture' in subtitle_codec_id_info
 
 def print_video_info_for_all():

@@ -50,6 +50,7 @@ def encode_subtitles_from_others_into_all_media_files(video_source_folder=None, 
     if not os.path.isdir(subtitle_source_folder): return
     destination_folder = destination_folder or input('Destination folder: ')
     os.makedirs(destination_folder, exist_ok = True)
+    original_subtitle_offset = subtitle_offset
     subtitle_offset = subtitle_offset # or input('Subtitle offset: ') or None
     max_difference = 1 # 1s
     max_ignorable_difference = 0.05 # 50ms
@@ -89,8 +90,9 @@ def encode_subtitles_from_others_into_all_media_files(video_source_folder=None, 
         encode_subtitles_into_media_file(video_file_path, subtitle_file_path, output_file_path, subtitle_offset)
         success_msg = f'Merged {subtitle_file_name} with offset {subtitle_offset}' if subtitle_offset else f'Merged {subtitle_file_name}'
         print(success_msg)
+        subtitle_offset = original_subtitle_offset # reset the offset, in case it was changed
     print('\nAll files processed successfully!')
-    log('END OF FOLDER')
+    log(f'END OF FOLDER {os.path.basename(destination_folder)}')
 
 def encode_subtitles_from_others_into_all_media_files_in_multiple_directories():
     with open('errors.txt', 'a', encoding='utf-8') as f:
