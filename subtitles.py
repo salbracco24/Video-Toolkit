@@ -5,6 +5,7 @@ import subprocess
 
 SUPPORTED_FILE_EXTENSIONS = ('.mkv', '.mp4')
 EPISODE_PATTERN = re.compile(r"(?i)S\d\dE\d\d")
+FFS_PATTERN = re.compile(r"score:\s*(\d+\.\d+).*offset seconds:\s*(\d+\.\d+)")
 
 def extract_subtitles_from_media_file(input_media_file, output_subtitle_file):
     ffmpeg_with_args = ['ffmpeg', '-loglevel', '16', '-i', input_media_file, '-c', 'srt', output_subtitle_file]
@@ -22,7 +23,7 @@ def encode_subtitles_into_media_file(input_media_file, input_subtitle_file, outp
 
 def sync_subtitles_with_media_file(input_media_file, input_subtitle_file, output_subtitle_file):
     ffs_with_args = ['ffs', input_media_file, '-i', input_subtitle_file, '-o', output_subtitle_file]
-    return subprocess.run(ffs_with_args, capture_output=True)
+    return subprocess.run(ffs_with_args, capture_output=True, text=True)
 
 def extract_subtitles_from_all_media_files(source_folder=None, destination_folder=None):
     source_folder = source_folder or input('Source folder: ')
@@ -38,9 +39,10 @@ def extract_subtitles_from_all_media_files(source_folder=None, destination_folde
         media_file_name, _ = os.path.splitext(media_file)
         episode_identifier_match = EPISODE_PATTERN.search(media_file_name)
         subtitle_file_name = episode_identifier_match[0].upper() if episode_identifier_match else media_file_name
+        if not episode_identifier_match: print(f'Error: {media_file_name} does not contain a valid episode identifier, full name used instead.')
         subtitle_file_path = os.path.join(destination_folder, subtitle_file_name + '.srt')
         result = extract_subtitles_from_media_file(media_file_path, subtitle_file_path)
-        print(f'Extracted subtitles from {media_file_name}' if not result.returncode else f'Did not extract subtitles from {media_file_name}')
+        print(f'Extracted subtitles from {media_file_name}' if not result.returncode else f'Error: Did not extract subtitles from {media_file_name}')
 
     print('\nAll files processed successfully!')
 
@@ -68,6 +70,41 @@ def encode_subtitles_into_all_media_files(source_folder=None, destination_folder
             print(operation, media_file_name)
         else:
             raise Exception(f'Error: Subtitle not found for {media_file_name}.')
+
+    print('\nAll files processed successfully!')
+
+def sync_subtitles_with_all_media_files(media_source_folder=None, subtitles_source_folder=None, subtitles_destination_folder=None):
+    media_source_folder = media_source_folder or input('Media source folder: ')
+    if not os.path.isdir(media_source_folder): return
+    subtitles_source_folder = subtitles_source_folder or input('Subtitles source folder: ')
+    if not os.path.isdir(subtitles_source_folder): return
+    subtitles_destination_folder = subtitles_destination_folder or media_source_folder or input('Subtitles destination folder: ')
+    # os.makedirs(subtitles_destination_folder, exist_ok = True)
+    print()
+    
+    media_files = [file for file in os.listdir(media_source_folder) if file.endswith(SUPPORTED_FILE_EXTENSIONS)]
+
+    for media_file in media_files:
+        media_file_path = os.path.join(media_source_folder, media_file)
+        media_file_name, _ = os.path.splitext(media_file)
+        episode_identifier_match = EPISODE_PATTERN.search(media_file_name)
+        if not episode_identifier_match:
+            print(f'Error: {media_file_name} does not contain a valid episode identifier, skipping.')
+            continue
+        subtitle_source_file_name = episode_identifier_match[0].upper()
+        subtitle_source_file_path = os.path.join(subtitles_source_folder, subtitle_source_file_name + '.srt')
+        subtitle_destination_file_path = os.path.join(subtitles_destination_folder, media_file_name + '.srt')
+        result = sync_subtitles_with_media_file(media_file_path, subtitle_source_file_path, subtitle_destination_file_path)
+        if not result.returncode:
+            sync_data = FFS_PATTERN.search(result.stdout)
+            if sync_data:
+                score = float(sync_data[1])
+                offset_seconds = float(sync_data[2])
+            else:
+                raise Exception(f'Unexpected output from ffs: {result.stdout}')
+            print(f'Synced subs with {media_file_name:25.25} Offset: {offset_seconds:5.3f}s  Score: {score:10.3f}')
+        else:
+            print(f'Error: Did not align subtitles {subtitle_source_file_name} with {media_file_name}')
 
     print('\nAll files processed successfully!')
 
