@@ -18,7 +18,7 @@ def encode_subtitles_into_media_file(input_media_file, input_subtitle_file, outp
 
 def extract_subtitles_from_media_file(input_media_file, output_subtitle_file):
     ffmpeg_with_args = ['ffmpeg', '-loglevel', '16', '-i', input_media_file, '-c', 'srt', output_subtitle_file]
-    return subprocess.run(ffmpeg_with_args, capture_output=True, check=True)
+    return subprocess.run(ffmpeg_with_args, capture_output=True)
 
 def extract_subtitles_from_all_media_files(source_folder=None, destination_folder=None):
     source_folder = source_folder or input('Source folder: ')
@@ -35,14 +35,14 @@ def extract_subtitles_from_all_media_files(source_folder=None, destination_folde
         episode_identifiers = re.findall(EPISODE_PATTERN, media_file_name)
         subtitle_file_name = media_file_name if len(episode_identifiers) < 1 else episode_identifiers[0]
         subtitle_file_path = os.path.join(destination_folder, subtitle_file_name + '.srt')
-        try:
-            extract_subtitles_from_media_file(media_file_path, subtitle_file_path)
-            print(f'Extracted subtitles from {media_file_name}')
-        except subprocess.CalledProcessError:
-            print(f'Did not extract subtitles from {media_file_name}')
+        result = extract_subtitles_from_media_file(media_file_path, subtitle_file_path)
+        print(f'Extracted subtitles from {media_file_name}' if not result.returncode else f'Did not extract subtitles from {media_file_name}')
 
     print('\nAll files processed successfully!')
 
+def sync_subtitles_with_media_file(input_media_file, input_subtitle_file, output_subtitle_file):
+    ffs_with_args = ['ffs', input_media_file, '-i', input_subtitle_file, '-o', output_subtitle_file]
+    return subprocess.run(ffs_with_args, capture_output=True)
 
 def encode_subtitles_into_all_media_files(source_folder=None, destination_folder=None, subtitle_offset=None, shift=False):
     source_folder = source_folder or input('Source folder: ')
