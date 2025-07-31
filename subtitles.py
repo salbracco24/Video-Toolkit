@@ -6,6 +6,10 @@ import subprocess
 SUPPORTED_FILE_EXTENSIONS = ('.mkv', '.mp4')
 EPISODE_PATTERN = re.compile(r"(?i)S\d\dE\d\d")
 
+def extract_subtitles_from_media_file(input_media_file, output_subtitle_file):
+    ffmpeg_with_args = ['ffmpeg', '-loglevel', '16', '-i', input_media_file, '-c', 'srt', output_subtitle_file]
+    return subprocess.run(ffmpeg_with_args, capture_output=True)
+
 def encode_subtitles_into_media_file(input_media_file, input_subtitle_file, output_media_file, subtitle_offset):
     ffmpeg_with_args = ['ffmpeg', '-loglevel', '16', '-i', input_media_file]
     if subtitle_offset:
@@ -16,9 +20,9 @@ def encode_subtitles_into_media_file(input_media_file, input_subtitle_file, outp
     ffmpeg_with_args.extend(['-metadata:s:s:0', 'language=eng', output_media_file])
     return subprocess.run(ffmpeg_with_args, check=True)
 
-def extract_subtitles_from_media_file(input_media_file, output_subtitle_file):
-    ffmpeg_with_args = ['ffmpeg', '-loglevel', '16', '-i', input_media_file, '-c', 'srt', output_subtitle_file]
-    return subprocess.run(ffmpeg_with_args, capture_output=True)
+def sync_subtitles_with_media_file(input_media_file, input_subtitle_file, output_subtitle_file):
+    ffs_with_args = ['ffs', input_media_file, '-i', input_subtitle_file, '-o', output_subtitle_file]
+    return subprocess.run(ffs_with_args, capture_output=True)
 
 def extract_subtitles_from_all_media_files(source_folder=None, destination_folder=None):
     source_folder = source_folder or input('Source folder: ')
@@ -39,10 +43,6 @@ def extract_subtitles_from_all_media_files(source_folder=None, destination_folde
         print(f'Extracted subtitles from {media_file_name}' if not result.returncode else f'Did not extract subtitles from {media_file_name}')
 
     print('\nAll files processed successfully!')
-
-def sync_subtitles_with_media_file(input_media_file, input_subtitle_file, output_subtitle_file):
-    ffs_with_args = ['ffs', input_media_file, '-i', input_subtitle_file, '-o', output_subtitle_file]
-    return subprocess.run(ffs_with_args, capture_output=True)
 
 def encode_subtitles_into_all_media_files(source_folder=None, destination_folder=None, subtitle_offset=None, shift=False):
     source_folder = source_folder or input('Source folder: ')
