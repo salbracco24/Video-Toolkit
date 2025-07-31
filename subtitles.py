@@ -4,6 +4,7 @@ import re
 import subprocess
 
 SUPPORTED_FILE_EXTENSIONS = ('.mkv', '.mp4')
+EPISODE_PATTERN = re.compile(r"(?i)S\d\dE\d\d")
 
 def encode_subtitles_into_media_file(input_media_file, input_subtitle_file, output_media_file, subtitle_offset):
     ffmpeg_with_args = ['ffmpeg', '-loglevel', '16', '-i', input_media_file]
@@ -13,7 +14,35 @@ def encode_subtitles_into_media_file(input_media_file, input_subtitle_file, outp
     if output_media_file.endswith('.mp4'):
         ffmpeg_with_args.extend(['-c:s', 'mov_text'])
     ffmpeg_with_args.extend(['-metadata:s:s:0', 'language=eng', output_media_file])
-    subprocess.run(ffmpeg_with_args, check=True)
+    return subprocess.run(ffmpeg_with_args, check=True)
+
+def extract_subtitles_from_media_file(input_media_file, output_subtitle_file):
+    ffmpeg_with_args = ['ffmpeg', '-loglevel', '16', '-i', input_media_file, '-c', 'srt', output_subtitle_file]
+    return subprocess.run(ffmpeg_with_args, capture_output=True, check=True)
+
+def extract_subtitles_from_all_media_files(source_folder=None, destination_folder=None):
+    source_folder = source_folder or input('Source folder: ')
+    if not os.path.isdir(source_folder): return
+    destination_folder = destination_folder or input('Destination folder: ')
+    os.makedirs(destination_folder, exist_ok = True)
+    print()
+    
+    media_files = [file for file in os.listdir(source_folder) if file.endswith(SUPPORTED_FILE_EXTENSIONS)]
+
+    for media_file in media_files:
+        media_file_path = os.path.join(source_folder, media_file)
+        media_file_name, _ = os.path.splitext(media_file)
+        episode_identifiers = re.findall(EPISODE_PATTERN, media_file_name)
+        subtitle_file_name = media_file_name if len(episode_identifiers) < 1 else episode_identifiers[0]
+        subtitle_file_path = os.path.join(destination_folder, subtitle_file_name + '.srt')
+        try:
+            extract_subtitles_from_media_file(media_file_path, subtitle_file_path)
+            print(f'Extracted subtitles from {media_file_name}')
+        except subprocess.CalledProcessError:
+            print(f'Did not extract subtitles from {media_file_name}')
+
+    print('\nAll files processed successfully!')
+
 
 def encode_subtitles_into_all_media_files(source_folder=None, destination_folder=None, subtitle_offset=None, shift=False):
     source_folder = source_folder or input('Source folder: ')

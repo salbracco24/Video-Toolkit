@@ -2,7 +2,8 @@
 
 ### Use Cases
 - Merge SRT files with corresponding video files
-- Shift subtitles within video files
+- Extract subtitles from multiple video files
+- Shift subtitles within multiple video files
 - Display video info for multiple video files
 
 ### Prerequisites
@@ -12,6 +13,8 @@
 
 ### Usage: `python -u .\cli.py`
 
+### Notes
+  - Options 5 & 6 are in beta, and should not be used
+
 ### To Do
   - Write unit tests
-  - Test option 4 thoroughly (for now, it's in beta)
