@@ -11,9 +11,10 @@ def main():
         1: ('Print video info', info.print_video_info_for_all),
         2: ('Extract subtitles', subtitles.extract_subtitles_from_all_media_files),
         3: ('Merge subtitles', subtitles.encode_subtitles_into_all_media_files),
-        4: ('Shift subtitles', lambda: subtitles.encode_subtitles_into_all_media_files(shift = True)),
-        5: ('Merge subtitles from other video files', subtitles.encode_subtitles_from_others_into_all_media_files),
-        6: ('Merge subtitles from other video files in multiple folders (Experimental)', subtitles.encode_subtitles_from_others_into_all_media_files_in_multiple_directories)
+        4: ('Merge subtitles with auto sync', placeholder),
+        5: ('Shift subtitles', lambda: subtitles.encode_subtitles_into_all_media_files(shift = True)),
+        6: ('Merge subtitles from other video files', subtitles.encode_subtitles_from_others_into_all_media_files),
+        7: ('Merge subtitles from other video files in multiple folders (Experimental)', subtitles.encode_subtitles_from_others_into_all_media_files_in_multiple_directories)
     }
     
     print()
