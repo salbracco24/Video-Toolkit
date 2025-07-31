@@ -36,8 +36,8 @@ def extract_subtitles_from_all_media_files(source_folder=None, destination_folde
     for media_file in media_files:
         media_file_path = os.path.join(source_folder, media_file)
         media_file_name, _ = os.path.splitext(media_file)
-        episode_identifiers = re.findall(EPISODE_PATTERN, media_file_name)
-        subtitle_file_name = media_file_name if len(episode_identifiers) < 1 else episode_identifiers[0]
+        episode_identifier_match = EPISODE_PATTERN.search(media_file_name)
+        subtitle_file_name = episode_identifier_match[0].upper() if episode_identifier_match else media_file_name
         subtitle_file_path = os.path.join(destination_folder, subtitle_file_name + '.srt')
         result = extract_subtitles_from_media_file(media_file_path, subtitle_file_path)
         print(f'Extracted subtitles from {media_file_name}' if not result.returncode else f'Did not extract subtitles from {media_file_name}')
@@ -84,7 +84,6 @@ def encode_subtitles_from_others_into_all_media_files(video_source_folder=None, 
     max_difference = 1 # 1s
     max_ignorable_difference = 0.05 # 50ms
     output_media_suffix = ' [Merged]'
-    pattern = re.compile(r"S\d\dE\d\d")
     print()
 
     video_files = [file for file in os.listdir(video_source_folder) if file.endswith(SUPPORTED_FILE_EXTENSIONS)]
@@ -93,7 +92,7 @@ def encode_subtitles_from_others_into_all_media_files(video_source_folder=None, 
     for video_file in video_files:
         video_file_path = os.path.join(video_source_folder, video_file)
         video_file_name, video_file_extension = os.path.splitext(video_file)
-        match = pattern.search(video_file_name)
+        match = EPISODE_PATTERN.search(video_file_name)
         if not match:
             log(f'The file {video_file} does not contain a valid episode identifier.')
             continue
