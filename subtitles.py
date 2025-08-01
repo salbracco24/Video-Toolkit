@@ -22,7 +22,7 @@ def encode_subtitles_into_media_file(input_media_file, input_subtitle_file, outp
     return subprocess.run(ffmpeg_with_args, check=True)
 
 def sync_subtitles_with_media_file(input_media_file, input_subtitle_file, output_subtitle_file):
-    ffs_with_args = ['ffs', input_media_file, '-i', input_subtitle_file, '-o', output_subtitle_file]
+    ffs_with_args = ['ffs', '-i', input_subtitle_file, '-o', output_subtitle_file, input_media_file]
     return subprocess.run(ffs_with_args, capture_output=True, text=True)
 
 def extract_subtitles_from_all_media_files(source_folder=None, destination_folder=None):
@@ -110,7 +110,7 @@ def sync_subtitles_with_all_media_files(media_source_folder=None, subtitles_sour
                 raise Exception(f'Unexpected output from ffs\nstdout: {result.stdout}\nstderr: {result.stderr}')
             print(f'Synced subs with {media_file_name:50.50}  Offset: {offset_seconds:6.3f}s  Score: {score:10.3f}')
         else:
-            print(f'Error: Did not align subtitles {subtitle_source_file_name} with {media_file_name}')
+            print(f'Error: Did not align subtitles {subtitle_source_file_name} with {media_file_name}\nstderr: {result.stderr}')
 
     print('\nAll files processed successfully!')
 
