@@ -69,7 +69,8 @@ def encode_subtitles_into_all_media_files(source_folder=None, destination_folder
             encode_subtitles_into_media_file(media_file_path, subtitle_file_path, output_file_path, subtitle_offset)
             print(operation, media_file_name)
         else:
-            raise Exception(f'Error: Subtitle not found for {media_file_name}.')
+            print(f'Error: Subtitle not found for {media_file_name}, skipping.')
+            continue
 
     print('\nAll files processed successfully!')
 
@@ -94,6 +95,9 @@ def sync_subtitles_with_all_media_files(media_source_folder=None, subtitles_sour
             continue
         subtitle_source_file_name = episode_identifier_match[0].upper()
         subtitle_source_file_path = os.path.join(subtitles_source_folder, subtitle_source_file_name + '.srt')
+        if not os.path.isfile(subtitle_source_file_path):
+            print(f'Error: {subtitle_source_file_name}.srt does not exist, skipping.')
+            continue
         subtitle_destination_file_path = os.path.join(subtitles_destination_folder, media_file_name + '.srt')
         if os.path.isfile(subtitle_destination_file_path):
             print(f'Skipping since this file already exists: {media_file_name + '.srt'}')
