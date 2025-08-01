@@ -5,7 +5,7 @@ import subprocess
 
 SUPPORTED_FILE_EXTENSIONS = ('.mkv', '.mp4')
 EPISODE_PATTERN = re.compile(r"(?i)S\d\dE\d\d")
-FFS_PATTERN = re.compile(r"score:\s*(\d+\.\d+).*offset seconds:\s*(\d+\.\d+)")
+FFS_PATTERN = re.compile(r"(?s)score:\s*(\d+\.\d+).*offset seconds:\s*(-?\d+\.\d+)")
 
 def extract_subtitles_from_media_file(input_media_file, output_subtitle_file):
     ffmpeg_with_args = ['ffmpeg', '-loglevel', '16', '-i', input_media_file, '-c', 'srt', output_subtitle_file]
@@ -79,6 +79,7 @@ def sync_subtitles_with_all_media_files(media_source_folder=None, subtitles_sour
     subtitles_source_folder = subtitles_source_folder or input('Subtitles source folder: ')
     if not os.path.isdir(subtitles_source_folder): return
     subtitles_destination_folder = subtitles_destination_folder or media_source_folder or input('Subtitles destination folder: ')
+    print(f'Subtitles destination folder: {subtitles_destination_folder}')
     # os.makedirs(subtitles_destination_folder, exist_ok = True)
     print()
     
@@ -94,15 +95,20 @@ def sync_subtitles_with_all_media_files(media_source_folder=None, subtitles_sour
         subtitle_source_file_name = episode_identifier_match[0].upper()
         subtitle_source_file_path = os.path.join(subtitles_source_folder, subtitle_source_file_name + '.srt')
         subtitle_destination_file_path = os.path.join(subtitles_destination_folder, media_file_name + '.srt')
+        if os.path.isfile(subtitle_destination_file_path):
+            print(f'Skipping since this file already exists: {media_file_name + '.srt'}')
+            continue
+        
         result = sync_subtitles_with_media_file(media_file_path, subtitle_source_file_path, subtitle_destination_file_path)
+        
         if not result.returncode:
-            sync_data = FFS_PATTERN.search(result.stdout)
+            sync_data = FFS_PATTERN.search(result.stderr)
             if sync_data:
                 score = float(sync_data[1])
                 offset_seconds = float(sync_data[2])
             else:
-                raise Exception(f'Unexpected output from ffs: {result.stdout}')
-            print(f'Synced subs with {media_file_name:25.25} Offset: {offset_seconds:5.3f}s  Score: {score:10.3f}')
+                raise Exception(f'Unexpected output from ffs\nstdout: {result.stdout}\nstderr: {result.stderr}')
+            print(f'Synced subs with {media_file_name:50.50}  Offset: {offset_seconds:6.3f}s  Score: {score:10.3f}')
         else:
             print(f'Error: Did not align subtitles {subtitle_source_file_name} with {media_file_name}')
 
